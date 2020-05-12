@@ -51,7 +51,6 @@ function request(options, ok_cb, err_cb, data)
 				res_data += chunk.toString();
 			});
 			res.on("end", function () {
-				console.log(res_data);
 				ok_cb(JSON.parse(res_data));
 			});
 		} else
@@ -109,7 +108,7 @@ function publish()
 		request({
 			"hostname": "api.boxcrittersmods.ga",
 			"port": 443,
-			"path": `/modsubmit/${url.replace(".user.js", "")}`,
+			"path": `/modsubmit/${new Buffer.from(url).toString("base64")}`,
 			"method": "GET"
 		}, function (data) {}, function (err) {
 			console.error(`\x1b[1;31mERR\x1b[0m: ${err}.`);
