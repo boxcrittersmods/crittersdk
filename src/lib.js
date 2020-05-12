@@ -26,7 +26,7 @@
  * @copyright 2020 Alvarito050506 <donfrutosgomez@gmail.com>
  * @copyright 2020 The Box Critters Modding Community
  * @license Apache-2.0
- * @version 0.4.0
+ * @version 0.4.1
  * 
  **/
 
@@ -78,7 +78,7 @@ function request(options, ok_cb, err_cb, data)
  * @copyright 2020 Alvarito050506 <donfrutosgomez@gmail.com>
  * @copyright 2020 The Box Critters Modding Community
  * @license Apache-2.0
- * @version 0.4.0
+ * @version 0.4.1
  * 
  **/
 
