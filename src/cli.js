@@ -27,7 +27,7 @@
  * @copyright 2020 Alvarito050506 <donfrutosgomez@gmail.com>
  * @copyright 2020 The Box Critters Modding Community
  * @license Apache-2.0
- * @version 0.4.1
+ * @version 0.5.0
  * 
  **/
 
@@ -35,49 +35,31 @@ const readline = require("readline");
 const fs = require("fs");
 const crypto = require("crypto");
 const https = require("https");
+const http = require("http");
+const url = require("url");
+const os = require("os");
+const child = require("child_process");
+const request = require("request");
+const path = require("path");
 
 var rl = readline.createInterface({
 	input: process.stdin,
 	output: process.stdout
 });
 
-function request(options, ok_cb, err_cb, data)
+function open(command)
 {
-	var res_data = String();
-	const req = https.request(options, function (res) {
-		if (res.statusCode >= 200 && res.statusCode < 300)
-		{
-			res.on("data", function (chunk) {
-				res_data += chunk.toString();
-			});
-			res.on("end", function () {
-				ok_cb(JSON.parse(res_data));
-			});
-		} else
-		{
-			err_cb({
-				"status": res.statusCode
-			});
-		}
-	});
-	req.on("error", function (err) {
-		err_cb(err);
-	});
-
-	if ((options.method == "POST" || options.method == "PUT" || options.method == "PATCH") && typeof(data) != "undefined")
-	{
-		req.write(JSON.stringify(data));
-	}
-	req.end();
+	var start = (process.platform == "darwin" ? "open" : process.platform == "win32" ? "start": "xdg-open");
+	return child.exec(`${start} ${command}`);
 }
 
 function init()
 {
-	rl.question("Mod name: ", function(name) {
-		rl.question("Mod version: (0.1.0) ", function(version) {
-			rl.question("Mod description: ", function(description) {
-				rl.question("Mod namespace (website): (https://boxcrittersmods.ga) ", function(namespace) {
-					rl.question("Mod author: ", function(author) {
+	rl.question("Mod name: ", function (name) {
+		rl.question("Mod version: (0.1.0) ", function (version) {
+			rl.question("Mod description: ", function (description) {
+				rl.question("Mod namespace (website): (https://boxcrittersmods.ga) ", function (namespace) {
+					rl.question("Mod author: ", function (author) {
 						var template = `// ==UserScript==\n// @name ${name}\n// @namespace ${namespace || "https://boxcrittersmods.ga"}\n// @version ${version || "0.1.0"}\n// @description ${description}\n// @author ${author}\n// @match https://boxcritters.com/play/index.html\n// @grant unsafeWindow\n// @require https://cdn.boxcrittersmods.ga/crittersdk/master/src/lib.js\n// @run-at document-end\n// ==/UserScript==\n`;
 						fs.writeFile("./index.user.js", template, function (err) {
 							if (err)
@@ -99,25 +81,184 @@ function init()
 
 function publish()
 {
-	rl.question("Mod URL: ", function(url) {
-		if (url == "")
-		{
-			console.error("\x1b[1;31mERR\x1b[0m: Invalid URL.");
-			return 1;
-		}
-		request({
-			"hostname": "api.boxcrittersmods.ga",
-			"port": 443,
-			"path": `/modsubmit/${new Buffer.from(url).toString("base64")}`,
-			"method": "GET"
-		}, function (data) {}, function (err) {
-			console.error(`\x1b[1;31mERR\x1b[0m: ${err}.`);
+	rl.question("Password: ", function (password) {
+		fs.readFile(os.homedir() + "/.crittersdk.json", "utf8", function (err, data) {
+			if (err)
+			{
+				console.error(`\x1b[1;31mERR\x1b[0m: ${err}.`);
+				return;
+			}
+			var username = JSON.parse(data).username;
+			var token = JSON.parse(data).token;
+			var aes = crypto.createDecipher("aes-256-cbc", password);
+			var dec = aes.update(token, "hex", "utf8");
+			dec += aes.final("utf-8");
+			request.get({
+				"url": "https://api.github.com/gists",
+				"headers": {
+					"Accept": "application/json",
+					"User-Agent": "CritterSDK",
+					"Authorization": `token ${dec}`
+				}
+			},  function (err, res, body) {
+				if (err)
+				{
+					console.error(`\x1b[1;31mERR\x1b[0m: ${err}.`);
+					return;
+				}
+				var gists = JSON.parse(body);
+				fs.readFile(process.cwd() + "/index.user.js", "utf8", function (err, data) {
+					if (err)
+					{
+						console.error(`\x1b[1;31mERR\x1b[0m: ${err}.`);
+						return;
+					}
+					var name = data.match(/\/\/\s*@name\s+(.*)\s*\n/i)[1];
+					var description = data.match(/\/\/\s*@description\s+(.*)\s*\n/i)[1];
+					var id;
+					gists.forEach(function (gist) {
+						if (gist.description == name)
+						{
+							id = gist.id;
+						}
+					});
+					if (id)
+					{
+						request.patch({
+							"url": `https://api.github.com/gists/${id}`,
+							"headers": {
+								"Accept": "application/json",
+								"User-Agent": "CritterSDK",
+								"Authorization": `token ${dec}`
+							},
+							"body": JSON.stringify({
+								"description": name,
+								"public": true,
+								"files": {
+									"index.user.js": {
+										"content": data
+									}
+								}
+							})
+						},  function (err, res, body) {
+							if (err)
+							{
+								console.error(`\x1b[1;31mERR\x1b[0m: ${err}.`);
+								return;
+							}
+							console.log("\x1b[1;37mINFO\x1b[0m: Project published succefully!");
+						});
+					} else
+					{
+						request.post({
+							"url": "https://api.github.com/gists",
+							"headers": {
+								"Accept": "application/json",
+								"User-Agent": "CritterSDK",
+								"Authorization": `token ${dec}`
+							},
+							"body": JSON.stringify({
+								"description": name,
+								"public": true,
+								"files": {
+									"index.user.js": {
+										"content": data
+									}
+								}
+							})
+						},  function (err, res, body) {
+							if (err)
+							{
+								console.error(`\x1b[1;31mERR\x1b[0m: ${err}.`);
+								return;
+							}
+							request.get({
+								"url": `https://api.boxcrittersmods.ga/modsubmit/${new Buffer.from(JSON.parse(body).files["index.user.js"].raw_url).toString("base64")}`,
+								"headers": {
+									"Accept": "application/json",
+									"User-Agent": "CritterSDK",
+								}
+							}, function (err, res, body) {
+								if (err)
+								{
+									console.error(`\x1b[1;31mERR\x1b[0m: ${err}.`);
+									return;
+								}
+								console.log("\x1b[1;37mINFO\x1b[0m: Project submited succefully!");
+							});
+						});
+					}
+				});
+			});
 			rl.close();
-			return 1;
 		});
-		console.log("\x1b[1;37mINFO\x1b[0m: Project submited sucefully!");
-		rl.close();
 	});
+	return 0;
+}
+
+function config()
+{
+	var token;
+	var server = http.createServer(function (req, res) {
+		var query = url.parse(req.url, true).query;
+		res.writeHead(200, {
+			"Content-Type": "text/html"
+		});
+		res.end(`<b style="font-family: sans-serif;">You can now close this window.</b>\n`);
+		server.close();
+		request.post({
+			"url": `https://auth.boxcrittersmods.ga/${JSON.parse(JSON.stringify(query)).code}`,
+			"headers": {
+				"Accept": "application/json"
+			}
+		}, function (err, res, body) {
+			if (err)
+			{
+				console.error(`\x1b[1;31mERR\x1b[0m: ${err}.`);
+				return;
+			}
+			if (token)
+			{
+				return;
+			}
+			token = JSON.parse(body).access_token;
+			if (JSON.parse(body).scope != "gist,read:user,user:email")
+			{
+				console.error(`\x1b[1;31mERR\x1b[0m: Invalid token.`);
+				return;
+			}
+			request.get({
+				"url": "https://api.github.com/user",
+				"headers": {
+					"Accept": "application/json",
+					"User-Agent": "CritterSDK",
+					"Authorization": `token ${token}`
+				}
+			},  function (err, res, body) {
+				if (err)
+				{
+					console.error(`\x1b[1;31mERR\x1b[0m: ${err}.`);
+					return;
+				}
+				var username = JSON.parse(body).login;
+				rl.question("Create a new password: ", function (password) {
+					var aes = crypto.createCipher("aes-256-cbc", password);
+					var enc = aes.update(token, "utf8", "hex");
+					enc += aes.final("hex");
+					fs.writeFile(os.homedir() + "/.crittersdk.json", `{"username": "${username}", "token": "${enc}"}`, function (err) {
+						if (err)
+						{
+							console.error(`\x1b[1;31mERR\x1b[0m: ${err}.`);
+							return;
+						}
+						rl.close();
+					});
+				});
+			});
+		});
+	});
+	server.listen(7977);
+	open("https://github.com/login/oauth/authorize?client_id=7b419d4d83d775bf93a3&scope=gist%20read:user%20user:email");
 	return 0;
 }
 
@@ -126,8 +267,10 @@ function help(argv)
 	console.log(`\x1b[1;37mINFO\x1b[0m: Usage: ${argv[1].split("/").pop()} command`);
 	console.log("Commands:")
 	console.log("  init:    Creates a new empty project.");
+	console.log("  config:  Configures the SDK.");
 	console.log("  publish: Submits the mod to the BCMC for approval and publishing.");
 	console.log("  help:    Shows this help.\n");
+	console.log("To get more info, go to https://github.com/boxcritters/crittersdk.\n");
 	rl.close();
 }
 
@@ -139,6 +282,9 @@ function main(argv)
 	} else if (argv[2] && argv[2] == "publish")
 	{
 		publish();
+	} else if (argv[2] && argv[2] == "config")
+	{
+		config();
 	} else if (argv[2] && argv[2] == "help")
 	{
 		help(argv);
