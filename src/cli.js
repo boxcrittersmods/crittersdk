@@ -27,7 +27,7 @@
  * @copyright 2020 Alvarito050506 <donfrutosgomez@gmail.com>
  * @copyright 2020 The Box Critters Modding Community
  * @license Apache-2.0
- * @version 0.5.0
+ * @version 0.5.1
  * 
  **/
 
@@ -50,6 +50,7 @@ var rl = readline.createInterface({
 function open(command)
 {
 	var start = (process.platform == "darwin" ? "open" : process.platform == "win32" ? "start": "xdg-open");
+	command = process.platform == "win32" ? command.replace("&", "^&") : command;
 	return child.exec(`${start} ${command}`);
 }
 
