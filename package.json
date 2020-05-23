@@ -1,6 +1,6 @@
 {
   "name": "crittersdk",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "description": "A Box Critters Software Development Kit.",
   "main": "src/index.js",
   "scripts": {
