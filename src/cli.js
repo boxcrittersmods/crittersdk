@@ -61,7 +61,7 @@ function init()
 			rl.question("Mod description: ", function (description) {
 				rl.question("Mod namespace (website): (https://boxcrittersmods.ga) ", function (namespace) {
 					rl.question("Mod author: ", function (author) {
-						var template = `// ==UserScript==\n// @name ${name}\n// @namespace ${namespace || "https://boxcrittersmods.ga"}\n// @version ${version || "0.1.0"}\n// @description ${description}\n// @author ${author}\n// @match https://boxcritters.com/play/index.html\n// @grant unsafeWindow\n// @require https://cdn.boxcrittersmods.ga/crittersdk/master/src/lib.js\n// @run-at document-end\n// ==/UserScript==\n`;
+						var template = `// ==UserScript==\n// @name ${name}\n// @namespace ${namespace || "https://boxcrittersmods.ga"}\n// @version ${version || "0.1.0"}\n// @description ${description}\n// @author ${author}\n// @match *://*.boxcritters.com/play/index.html\n// @match *://play.boxcritters.com/\n// @grant unsafeWindow\n// @require https://cdn.boxcrittersmods.ga/crittersdk/master/src/lib.js\n// @run-at document-end\n// ==/UserScript==\n`;
 						fs.writeFile("./index.user.js", template, function (err) {
 							if (err)
 							{
