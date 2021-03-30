@@ -59,9 +59,9 @@ function init()
 	rl.question("Mod name: ", function (name) {
 		rl.question("Mod version: (0.1.0) ", function (version) {
 			rl.question("Mod description: ", function (description) {
-				rl.question("Mod namespace (website): (https://boxcrittersmods.ga) ", function (namespace) {
+				rl.question("Mod namespace (website): (https://bcmc.ga) ", function (namespace) {
 					rl.question("Mod author: ", function (author) {
-						var template = `// ==UserScript==\n// @name ${name}\n// @namespace ${namespace || "https://boxcrittersmods.ga"}\n// @version ${version || "0.1.0"}\n// @description ${description}\n// @author ${author}\n// @match *://*.boxcritters.com/play/index.html\n// @match *://play.boxcritters.com/\n// @grant unsafeWindow\n// @require https://cdn.boxcrittersmods.ga/crittersdk/master/src/lib.js\n// @run-at document-end\n// ==/UserScript==\n`;
+						var template = `// ==UserScript==\n// @name ${name}\n// @namespace ${namespace || "https://bcmc.ga"}\n// @version ${version || "0.1.0"}\n// @description ${description}\n// @author ${author}\n// @match *://*.boxcritters.com/play/index.html\n// @match *://play.boxcritters.com/\n// @grant unsafeWindow\n// @require https://cdn.bcmc.ga/crittersdk/master/src/lib.js\n// @run-at document-end\n// ==/UserScript==\n`;
 						fs.writeFile("./index.user.js", template, function (err) {
 							if (err)
 							{
@@ -174,7 +174,7 @@ function publish()
 								return;
 							}
 							request.get({
-								"url": `https://api.boxcrittersmods.ga/modsubmit/${new Buffer.from(JSON.parse(body).files["index.user.js"].raw_url).toString("base64")}`,
+								"url": `https://api.bcmc.ga/modsubmit/${new Buffer.from(JSON.parse(body).files["index.user.js"].raw_url).toString("base64")}`,
 								"headers": {
 									"Accept": "application/json",
 									"User-Agent": "CritterSDK",
@@ -208,7 +208,7 @@ function config()
 		res.end(`<b style="font-family: sans-serif;">You can now close this window.</b>\n`);
 		server.close();
 		request.post({
-			"url": `https://auth.boxcrittersmods.ga/${JSON.parse(JSON.stringify(query)).code}`,
+			"url": `https://auth.bcmc.ga/${JSON.parse(JSON.stringify(query)).code}`,
 			"headers": {
 				"Accept": "application/json"
 			}

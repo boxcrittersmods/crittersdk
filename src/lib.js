@@ -90,7 +90,7 @@ class BCModAPI
 {
 	/**
 	 * Creates a SDK instance.
-	 * @param {string} [domain="api.boxcrittersmods.ga"] - The Box Critters API domain.
+	 * @param {string} [domain="api.bcmc.ga"] - The Box Critters API domain.
 	 * @param {string} [token] - The hypothetical Box Critters API authentication token.
 	 * 
 	 **/
@@ -98,7 +98,7 @@ class BCModAPI
 	{
 		if (!domain)
 		{
-			this.domain = "api.boxcrittersmods.ga"; // "api.boxcritters.com" Plz ;-)
+			this.domain = "api.bcmc.ga"; // "api.boxcritters.com" Plz ;-)
 		} else if (typeof(token) == "string")
 		{
 			this.domain = domain;

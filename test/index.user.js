@@ -1,12 +1,12 @@
 // ==UserScript==
 // @name Test
-// @namespace https://boxcrittersmods.ga
+// @namespace https://bcmc.ga
 // @version 0.1.0
 // @description Test
 // @author Alvarito050506
 // @match https://boxcritters.com/play/index.html
 // @grant unsafeWindow
-// @require https://cdn.boxcrittersmods.ga/crittersdk/master/src/lib.js
+// @require https://cdn.bcmc.ga/crittersdk/master/src/lib.js
 // @run-at document-end
 // ==/UserScript==
 
